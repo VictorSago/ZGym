@@ -15,7 +15,7 @@ using ZGym.Core.Entities;
 
 namespace ZGym.Data.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
     {
         public DbSet<GymClass> GymClasses { get; set; }
 
