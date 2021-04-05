@@ -14,6 +14,6 @@ namespace ZGym.Core.Entities
         
         public DateTime EndTime { get { return StartTime + Duration; } }
         
-        // public virtual ICollection<ApplicationUserGymClass> AttendingMembers { get; set; }
+        public ICollection<ApplicationUserGymClass> AttendingMembers { get; set; }
     }
 }
