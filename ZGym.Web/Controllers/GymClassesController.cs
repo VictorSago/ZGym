@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -12,17 +13,19 @@ namespace ZGym.Web.Controllers
 {
     public class GymClassesController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public GymClassesController(ApplicationDbContext context)
+        public GymClassesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _dbContext = context;
+            _userManager = userManager;
         }
 
         // GET: GymClasses
         public async Task<IActionResult> Index()
         {
-            return View(await _context.GymClasses.ToListAsync());
+            return View(await _dbContext.GymClasses.ToListAsync());
         }
 
         // GET: GymClasses/Details/5
@@ -33,8 +36,10 @@ namespace ZGym.Web.Controllers
                 return NotFound();
             }
 
-            var gymClass = await _context.GymClasses
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var gymClass = await _dbContext.GymClasses
+                .Include(g => g.AttendingMembers)
+                .ThenInclude(a => a.ApplicationUser)
+                .FirstOrDefaultAsync(g => g.Id == id);
             if (gymClass == null)
             {
                 return NotFound();
@@ -58,8 +63,8 @@ namespace ZGym.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(gymClass);
-                await _context.SaveChangesAsync();
+                _dbContext.Add(gymClass);
+                await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(gymClass);
@@ -73,7 +78,7 @@ namespace ZGym.Web.Controllers
                 return NotFound();
             }
 
-            var gymClass = await _context.GymClasses.FindAsync(id);
+            var gymClass = await _dbContext.GymClasses.FindAsync(id);
             if (gymClass == null)
             {
                 return NotFound();
@@ -97,8 +102,8 @@ namespace ZGym.Web.Controllers
             {
                 try
                 {
-                    _context.Update(gymClass);
-                    await _context.SaveChangesAsync();
+                    _dbContext.Update(gymClass);
+                    await _dbContext.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,6 +121,44 @@ namespace ZGym.Web.Controllers
             return View(gymClass);
         }
 
+        // POST: GymClasses/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NewEdit(int? id)
+        {
+            if (id is null)
+            {
+                return BadRequest();
+            }
+
+            var gymClass = _dbContext.GymClasses.Find(id);
+
+            if (await TryUpdateModelAsync(gymClass, "", g => g.Name, g => g.Duration))
+            {
+                try
+                {
+                    // _dbContext.Update(gymClass);
+                    await _dbContext.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!GymClassExists(gymClass.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(gymClass);
+        }
+
         // GET: GymClasses/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -124,8 +167,8 @@ namespace ZGym.Web.Controllers
                 return NotFound();
             }
 
-            var gymClass = await _context.GymClasses
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var gymClass = await _dbContext.GymClasses
+                .FirstOrDefaultAsync(g => g.Id == id);
             if (gymClass == null)
             {
                 return NotFound();
@@ -139,15 +182,59 @@ namespace ZGym.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var gymClass = await _context.GymClasses.FindAsync(id);
-            _context.GymClasses.Remove(gymClass);
-            await _context.SaveChangesAsync();
+            var gymClass = await _dbContext.GymClasses.FindAsync(id);
+            _dbContext.GymClasses.Remove(gymClass);
+            await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> BookingToggle(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var gymClass = await _dbContext.GymClasses
+                                .Include(g => g.AttendingMembers)
+                                .ThenInclude(a => a.ApplicationUser)
+                                .FirstOrDefaultAsync(g => g.Id == id);
+            if (gymClass == null)
+            {
+                return NotFound();
+            }
+
+            var loggedInUser = _userManager.GetUserId(User);
+            var user = await _dbContext.Users
+                                .FirstOrDefaultAsync(u => u.Id == loggedInUser);
+            if (user is null)
+            {
+                return BadRequest();
+            }
+            var attendingMembers = gymClass.AttendingMembers;
+            var attendance = attendingMembers.FirstOrDefault(a => a.ApplicationUserId == loggedInUser);
+            if (attendance == null)
+            {
+                attendingMembers.Add(new ApplicationUserGymClass()
+                {
+                    GymClassId = gymClass.Id,
+                    GymClass = gymClass,
+                    ApplicationUserId = loggedInUser,
+                    ApplicationUser = user
+                });
+            }
+            else
+            {
+                attendingMembers.Remove(attendance);
+            }
+            _dbContext.Update(gymClass);
+            await _dbContext.SaveChangesAsync();
+            return View(nameof(Details), gymClass);
         }
 
         private bool GymClassExists(int id)
         {
-            return _context.GymClasses.Any(e => e.Id == id);
+            return _dbContext.GymClasses.Any(e => e.Id == id);
         }
     }
 }

@@ -30,6 +30,9 @@ namespace ZGym.Data.Data
 
             builder.Entity<ApplicationUserGymClass>()
                 .HasKey(a => new {a.ApplicationUserId, a.GymClassId});
+            
+            // Global query filter
+            // builder.Entity<GymClass>().HasQueryFilter(g => g.StartTime > DateTime.Now);
         }
     }
 }

@@ -44,7 +44,10 @@ namespace ZGym.Web
             
             services.AddControllersWithViews();
 
-            // services.AddControllersWithViews(config => );
+            // services.AddControllersWithViews(config => 
+            // {
+            //     config.Filters.Add()
+            // });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
