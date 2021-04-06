@@ -34,11 +34,17 @@ namespace ZGym.Web
             
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+            services.AddDefaultIdentity<ApplicationUser>(options => 
+                        {
+                            options.SignIn.RequireConfirmedAccount = false;
+                            options.Password.RequireNonAlphanumeric = false;
+                        })
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             
             services.AddControllersWithViews();
+
+            // services.AddControllersWithViews(config => );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
