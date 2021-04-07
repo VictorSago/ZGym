@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,6 +24,7 @@ namespace ZGym.Web.Controllers
         }
 
         // GET: GymClasses
+        // [Authorize(Roles = "Member")]
         public async Task<IActionResult> Index()
         {
             return View(await _dbContext.GymClasses.ToListAsync());
@@ -190,16 +192,51 @@ namespace ZGym.Web.Controllers
 
         public async Task<IActionResult> BookingToggle(int? id)
         {
-            if (id == null)
+            if (id is null)
             {
-                return NotFound();
+                return BadRequest();
+            }
+
+            var loggedInUser = _userManager.GetUserId(User);
+            var user = await _dbContext.Users
+                                .FirstOrDefaultAsync(u => u.Id == loggedInUser);
+            if (user is null)
+            {
+                return BadRequest();
+            }
+            var attending = await _dbContext.UserGymClasses.FindAsync(loggedInUser, id);
+            
+            if (attending is null)
+            {
+                var booking = new ApplicationUserGymClass
+                {
+                    GymClassId = (int)id,
+                    ApplicationUserId = loggedInUser
+                };
+
+                _dbContext.UserGymClasses.Add(booking);
+            }
+            else
+            {
+                _dbContext.UserGymClasses.Remove(attending);
+            }
+            
+            await _dbContext.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> BookingToggle2(int? id)
+        {
+            if (id is null)
+            {
+                return BadRequest();
             }
 
             var gymClass = await _dbContext.GymClasses
                                 .Include(g => g.AttendingMembers)
                                 .ThenInclude(a => a.ApplicationUser)
                                 .FirstOrDefaultAsync(g => g.Id == id);
-            if (gymClass == null)
+            if (gymClass is null)
             {
                 return NotFound();
             }
@@ -211,7 +248,7 @@ namespace ZGym.Web.Controllers
             {
                 return BadRequest();
             }
-            var attendingMembers = gymClass.AttendingMembers;
+            var attendingMembers = gymClass?.AttendingMembers;
             var attendance = attendingMembers.FirstOrDefault(a => a.ApplicationUserId == loggedInUser);
             if (attendance == null)
             {
