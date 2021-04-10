@@ -158,7 +158,7 @@ namespace ZGym.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(gymClass);
+            return View(nameof(Edit), gymClass);
         }
 
         // GET: GymClasses/Delete/5

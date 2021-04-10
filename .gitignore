@@ -355,17 +355,12 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
-# Ionide (cross platform F# VS Code tools) working folder
-.ionide/
-
 ##
 ## Visual studio for Mac
 ##
 
-
 # globs
 Makefile.in
-*.userprefs
 *.usertasks
 config.make
 config.status
@@ -401,6 +396,7 @@ Icon
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
+*.DotSettings
 
 # Directories potentially created on remote AFP share
 .AppleDB
@@ -457,4 +453,3 @@ $RECYCLE.BIN/
 ## Database Migrations
 ## 
 Migrations/
-MigrationBackup/
