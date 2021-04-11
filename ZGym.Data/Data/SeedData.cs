@@ -72,6 +72,8 @@ namespace ZGym.Data.Data
                 var admin = new ApplicationUser
                 {
                     UserName = "Admin",
+                    FirstName = "Admin",
+                    LastName = "A",
                     Email = adminEmail
                 };
 
