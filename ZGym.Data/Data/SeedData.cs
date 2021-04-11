@@ -34,7 +34,8 @@ namespace ZGym.Data.Data
                         Name = fake.Company.CatchPhrase(),
                         Description = fake.Hacker.Verb(),
                         Duration = new TimeSpan(0, 55, 0),
-                        StartTime = DateTime.Now.AddDays(fake.Random.Int(-2, 2))
+                        StartTime = fake.Date.Soon(16).AddDays(-2)
+                        // StartTime = DateTime.Now.AddDays(fake.Random.Int(-2, 2))
                     };
 
                     gymClasses.Add(gymClass);
