@@ -6,8 +6,17 @@
 
 <h1>Index</h1>
 
+<div id="createajax"></div>
+
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Create Normal</a>
+    <a asp-action="Create" class="btn btn-warning" 
+        data-ajax="true"
+        data-ajax-method="GET"
+        data-ajax-update="#createajax"
+        data-ajax-mode="replace">
+                                Create with Ajax
+    </a>
 </p>
 <table class="table">
     <thead>
@@ -51,15 +60,14 @@
             <td>
                 @if (User.Identity?.IsAuthenticated ?? false)
                 {
-                    <a asp-action="BookingToggle" asp-route-id="@item.Id">Book</a><span> |</span>
                     @if (User.IsInRole("Admin"))
                     {
                         <a asp-action="Edit" asp-route-id="@item.Id">Edit</a><span> |</span>
                     }
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a><span> |</span>
+                    <a asp-action="BookingToggle" asp-route-id="@item.Id">Book</a><span> |</span>
                     @if (User.IsInRole("Admin"))
                     {
-                        <span> |</span>
                         <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
                     }
                 }

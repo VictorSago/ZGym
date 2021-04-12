@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ZGym.Core.Entities;
 using ZGym.Data.Data;
+using ZGym.Web.Extensions;
 
 namespace ZGym.Web.Controllers
 {
@@ -55,7 +56,7 @@ namespace ZGym.Web.Controllers
         [Authorize]
         public IActionResult Create()
         {
-            return View();
+            return Request.IsAjax() ? PartialView("CreatePartial") : View();
         }
 
         // POST: GymClasses/Create
@@ -210,7 +211,7 @@ namespace ZGym.Web.Controllers
                 return BadRequest();
             }
             var attending = await _dbContext.UserGymClasses.FindAsync(loggedInUser, id);
-            
+
             if (attending is null)
             {
                 var booking = new ApplicationUserGymClass
@@ -225,7 +226,7 @@ namespace ZGym.Web.Controllers
             {
                 _dbContext.UserGymClasses.Remove(attending);
             }
-            
+
             await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
