@@ -62,6 +62,7 @@ namespace ZGym.Web.Controllers
                                         {
                                             Id = g.Id,
                                             Name = g.Name,
+                                            StartTime = g.StartTime,
                                             Duration = g.Duration,
                                             Description = g.Description,
                                             Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
@@ -334,12 +335,30 @@ namespace ZGym.Web.Controllers
         {
             var userId = _userManager.GetUserId(User);
 
-            var model = _dbContext.UserGymClasses
+            // var model1 = _dbContext.UserGymClasses
+            //                     .IgnoreQueryFilters()
+            //                     .Where(a => a.ApplicationUserId == userId)
+            //                     .Select(a => a.GymClass);
+            
+            var model = new IndexViewModel
+            {
+                GymClasses = await _dbContext.UserGymClasses
                                 .IgnoreQueryFilters()
                                 .Where(a => a.ApplicationUserId == userId)
-                                .Select(a => a.GymClass);
-
-            return View(nameof(Index), await model.ToListAsync());
+                                .Select(a => new GymClassesViewModel
+                                {
+                                    Id = a.GymClass.Id,
+                                    Name = a.GymClass.Name,
+                                    StartTime = a.GymClass.StartTime,
+                                    Duration = a.GymClass.Duration,
+                                    Description = a.GymClass.Description,
+                                    Attending = true
+                                })
+                                .ToListAsync()
+            };
+            
+            // return View(nameof(Index), await model.ToListAsync());
+            return View(nameof(Index), model);
         }
 
         private bool GymClassExists(int id)
