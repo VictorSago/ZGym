@@ -3,7 +3,16 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <a asp-action="Details" asp-route-id="@item.Id">
+                        @item.Name
+                    </a>
+                }
+                else
+                {
+                    @Html.DisplayNameFor(model => model.Name)
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StartTime)
@@ -25,8 +34,6 @@
                         <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                         <span> |</span>
                     }
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                    <span> |</span>
                     <a asp-action="BookingToggle" asp-route-id="@item.Id">Book</a>
                     @if (User.IsInRole("Admin"))
                     {

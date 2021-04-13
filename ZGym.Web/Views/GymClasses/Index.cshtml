@@ -4,23 +4,27 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>List of all classes</h1>
 
 <div id="create-ajax"></div>
 
-<div>
-    <a asp-action="Create">Create Normal</a>
+@if (User.IsInRole("Admin"))
+{
+    <div class="py-3">
+        <a asp-action="Create" class="btn btn-primary">Create Normal</a>
 
-    <p id="fetch">Fetch!</p>
+        <button id="fetch" class="btn btn-secondary">Create with Fetch</button>
 
-    <a asp-action="Create" class="btn btn-warning" 
-        data-ajax="true"
-        data-ajax-method="GET"
-        data-ajax-update="#create-ajax"
-        data-ajax-mode="replace">
-                                Create with Ajax
-    </a>
-</div>
+        <a asp-action="Create" class="btn btn-warning" 
+            data-ajax="true"
+            data-ajax-method="GET"
+            data-ajax-update="#create-ajax"
+            data-ajax-mode="replace">
+                Create with Ajax
+        </a>
+    </div>
+}
+
 <table class="table">
     <thead>
         <tr>
