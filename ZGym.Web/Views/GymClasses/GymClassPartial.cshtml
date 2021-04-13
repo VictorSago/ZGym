@@ -1,0 +1,34 @@
+@model GymClass
+
+<tr>
+    <td>
+        @Html.DisplayFor(item => item.Name)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.StartTime)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.Duration)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.EndTime)
+    </td>
+    <td>
+        @Html.DisplayFor(item => item.Description)
+    </td>
+    <td>
+        @if (User.Identity?.IsAuthenticated ?? false)
+        {
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a><span> |</span>
+            }
+            <a asp-action="Details" asp-route-id="@Model.Id">Details</a><span> |</span>
+            <a asp-action="BookingToggle" asp-route-id="@Model.Id">Book</a><span> |</span>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+            }
+        }
+    </td>
+</tr>

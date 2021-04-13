@@ -70,9 +70,21 @@ namespace ZGym.Web.Controllers
             {
                 _dbContext.Add(gymClass);
                 await _dbContext.SaveChangesAsync();
+
+                if (Request.IsAjax())
+                {
+                    // return PartialView("GymClassesPartial", await _dbContext.GymClasses.ToListAsync());
+                    return PartialView("GymClassPartial", gymClass);
+                }
+                
                 return RedirectToAction(nameof(Index));
             }
             return View(gymClass);
+        }
+
+        public ActionResult Fetch()
+        {
+            return PartialView("CreatePartial");
         }
 
         // GET: GymClasses/Edit/5
