@@ -13,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ZGym.Core.Entities;
 using ZGym.Data.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 namespace ZGym.Web
 {
@@ -44,10 +46,21 @@ namespace ZGym.Web
             
             services.AddControllersWithViews();
 
-            // services.AddControllersWithViews(config => 
-            // {
-            //     config.Filters.Add()
-            // });
+            services.AddControllersWithViews(config => 
+            {
+                var policy = new AuthorizationPolicyBuilder()
+                                    .RequireAuthenticatedUser()
+                                    .Build();
+                config.Filters.Add(new AuthorizeFilter(policy));
+            });
+
+            // Old way:
+            /* services.AddAuthorization(opt => 
+            {
+                opt.FallbackPolicy = new DefaultAuthorizationPolicyProvider().---;
+            }); */
+
+            services.AddAutoMapper(typeof(MapperProfile));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

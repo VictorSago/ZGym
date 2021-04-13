@@ -13,6 +13,8 @@ using ZGym.Web.Extensions;
 
 namespace ZGym.Web.Controllers
 {
+    // [Authorize(Roles = "Member")]
+    // [Authorize(Policy = "PolicyName1")]
     public class GymClassesController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
@@ -26,6 +28,7 @@ namespace ZGym.Web.Controllers
 
         // GET: GymClasses
         // [Authorize(Roles = "Member")]
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             return View(await _dbContext.GymClasses.ToListAsync());
@@ -82,6 +85,8 @@ namespace ZGym.Web.Controllers
             return View(gymClass);
         }
 
+        // ToDo
+        //[IsAjax]
         public ActionResult Fetch()
         {
             return PartialView("CreatePartial");
