@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ZGym.Core.Entities;
+using ZGym.Core.ViewModels;
 using ZGym.Data.Data;
 using ZGym.Web.Extensions;
 
@@ -19,11 +21,13 @@ namespace ZGym.Web.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMapper _mapper;
 
-        public GymClassesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public GymClassesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _dbContext = context;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         // GET: GymClasses
@@ -31,7 +35,40 @@ namespace ZGym.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            return View(await _dbContext.GymClasses.ToListAsync());
+            if (!User.Identity.IsAuthenticated)
+            {
+                var model1 = new IndexViewModel
+                {
+                    GymClasses = await _dbContext.GymClasses.Include(g => g.AttendingMembers)
+                                            .Select(g => new GymClassesViewModel 
+                                            {
+                                                Id = g.Id,
+                                                Name = g.Name,
+                                                Duration = g.Duration,
+                                                Description = g.Description
+                                                // Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
+                                            })
+                                            .ToListAsync()
+                };
+                return View(model1);
+            }
+
+            var userId = _userManager.GetUserId(User);
+            // var m = _mapper.Map<IEnumerable<GymClassesViewModel>>(_dbContext.GymClasses, opt => opt.Items.Add("Id", userId));
+            var model = new IndexViewModel
+            {
+                GymClasses = await _dbContext.GymClasses.Include(g => g.AttendingMembers)
+                                        .Select(g => new GymClassesViewModel 
+                                        {
+                                            Id = g.Id,
+                                            Name = g.Name,
+                                            Duration = g.Duration,
+                                            Description = g.Description,
+                                            Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
+                                        })
+                                        .ToListAsync()
+            };
+            return View(model);
         }
 
         // GET: GymClasses/Details/5
