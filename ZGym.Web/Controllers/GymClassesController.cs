@@ -288,6 +288,18 @@ namespace ZGym.Web.Controllers
             return View(nameof(Details), gymClass);
         }
 
+        public async Task<IActionResult> Bookings()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var model = _dbContext.UserGymClasses
+                                .IgnoreQueryFilters()
+                                .Where(a => a.ApplicationUserId == userId)
+                                .Select(a => a.GymClass);
+
+            return View(nameof(Index), await model.ToListAsync());
+        }
+
         private bool GymClassExists(int id)
         {
             return _dbContext.GymClasses.Any(e => e.Id == id);

@@ -21,12 +21,15 @@
         {
             @if (User.IsInRole("Admin"))
             {
-                <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a><span> |</span>
+                <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+                <span> |</span>
             }
-            <a asp-action="Details" asp-route-id="@Model.Id">Details</a><span> |</span>
-            <a asp-action="BookingToggle" asp-route-id="@Model.Id">Book</a><span> |</span>
+            <a asp-action="Details" asp-route-id="@Model.Id">Details</a>
+            <span> |</span>
+            <a asp-action="BookingToggle" asp-route-id="@Model.Id">Book</a>
             @if (User.IsInRole("Admin"))
             {
+                <span> |</span>
                 <a asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
             }
         }
