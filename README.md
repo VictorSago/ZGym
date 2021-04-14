@@ -1,6 +1,6 @@
 # ZGym Lexicon
 
-This code-along with Lexicon demonstrates several techniques:
+This exercise demonstrates several techniques:
 
 1. Three-tier architecture
 2. ASP.NET MVC Identity
