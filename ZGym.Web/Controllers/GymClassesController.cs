@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using ZGym.Core.Entities;
 using ZGym.Core.ViewModels;
 using ZGym.Data.Data;
+using ZGym.Data.Repositories;
 using ZGym.Web.Extensions;
 
 namespace ZGym.Web.Controllers
@@ -22,12 +23,16 @@ namespace ZGym.Web.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
+        private readonly UserGymClassRepository userGymClassRepo;
+        private readonly GymClassRepository gymClassRepository;
 
         public GymClassesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _dbContext = context;
             _userManager = userManager;
             _mapper = mapper;
+            userGymClassRepo = new UserGymClassRepository(context);
+            gymClassRepository = new GymClassRepository(context);
         }
 
         // GET: GymClasses
@@ -265,7 +270,7 @@ namespace ZGym.Web.Controllers
             {
                 return BadRequest();
             }
-            var attending = await _dbContext.UserGymClasses.FindAsync(loggedInUser, id);
+            var attending = await userGymClassRepo.GetAttending(id, loggedInUser);
 
             if (attending is null)
             {
@@ -365,5 +370,7 @@ namespace ZGym.Web.Controllers
         {
             return _dbContext.GymClasses.Any(e => e.Id == id);
         }
+
+        
     }
 }
