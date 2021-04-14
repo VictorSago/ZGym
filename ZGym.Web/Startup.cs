@@ -15,6 +15,8 @@ using ZGym.Core.Entities;
 using ZGym.Data.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using ZGym.Core.Repositories;
+using ZGym.Data.Repositories;
 
 namespace ZGym.Web
 {
@@ -61,6 +63,8 @@ namespace ZGym.Web
             }); */
 
             services.AddAutoMapper(typeof(MapperProfile));
+
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

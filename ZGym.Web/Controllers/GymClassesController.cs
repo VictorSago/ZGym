@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ZGym.Core.Entities;
+using ZGym.Core.Repositories;
 using ZGym.Core.ViewModels;
 using ZGym.Data.Data;
 using ZGym.Data.Repositories;
@@ -20,19 +21,15 @@ namespace ZGym.Web.Controllers
     // [Authorize(Policy = "PolicyName1")]
     public class GymClassesController : Controller
     {
-        private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
-        private readonly UserGymClassRepository userGymClassRepo;
-        private readonly GymClassRepository gymClassRepository;
+        private readonly IUnitOfWork uow;
 
-        public GymClassesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMapper mapper)
+        public GymClassesController(UserManager<ApplicationUser> userManager, IMapper mapper, IUnitOfWork unitOfWork)
         {
-            _dbContext = context;
             _userManager = userManager;
             _mapper = mapper;
-            userGymClassRepo = new UserGymClassRepository(context);
-            gymClassRepository = new GymClassRepository(context);
+            uow = unitOfWork;
         }
 
         // GET: GymClasses
@@ -44,7 +41,7 @@ namespace ZGym.Web.Controllers
             {
                 var model1 = new IndexViewModel
                 {
-                    GymClasses = await _dbContext.GymClasses.Include(g => g.AttendingMembers)
+                    GymClasses = uow.GymClassRepository.GetWithBookingsAsync().Result
                                             .Select(g => new GymClassesViewModel 
                                             {
                                                 Id = g.Id,
@@ -53,14 +50,13 @@ namespace ZGym.Web.Controllers
                                                 Description = g.Description
                                                 // Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
                                             })
-                                            .ToListAsync()
                 };
                 return View(model1);
             }
 
             var userId = _userManager.GetUserId(User);
-            // var m = _mapper.Map<IEnumerable<GymClassesViewModel>>(_dbContext.GymClasses, opt => opt.Items.Add("Id", userId));
-            var model = new IndexViewModel
+            var m = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetAllAsync(), opt => opt.Items.Add("Id", userId));
+            /* var model = new IndexViewModel
             {
                 GymClasses = await _dbContext.GymClasses.Include(g => g.AttendingMembers)
                                         .Select(g => new GymClassesViewModel 
@@ -73,8 +69,10 @@ namespace ZGym.Web.Controllers
                                             Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
                                         })
                                         .ToListAsync()
-            };
-            return View(model);
+            }; */
+            // var model = new IndexViewModel();
+            // return View(model);
+            return View(m);
         }
 
         // GET: GymClasses/Details/5
@@ -86,10 +84,7 @@ namespace ZGym.Web.Controllers
                 return NotFound();
             }
 
-            var gymClass = await _dbContext.GymClasses
-                .Include(g => g.AttendingMembers)
-                .ThenInclude(a => a.ApplicationUser)
-                .FirstOrDefaultAsync(g => g.Id == id);
+            var gymClass = await uow.GymClassRepository.GetWithUsersAsync(id);
             if (gymClass == null)
             {
                 return NotFound();
@@ -114,9 +109,9 @@ namespace ZGym.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _dbContext.Add(gymClass);
-                await _dbContext.SaveChangesAsync();
-
+                uow.GymClassRepository.Add(gymClass);
+                await uow.CompeteAsync();
+                
                 if (Request.IsAjax())
                 {
                     // return PartialView("GymClassesPartial", await _dbContext.GymClasses.ToListAsync());
@@ -139,13 +134,13 @@ namespace ZGym.Web.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
+            if (id is null)
             {
                 return NotFound();
             }
 
-            var gymClass = await _dbContext.GymClasses.FindAsync(id);
-            if (gymClass == null)
+            var gymClass = await uow.GymClassRepository.FindAsync(id);
+            if (gymClass is null)
             {
                 return NotFound();
             }
@@ -168,8 +163,8 @@ namespace ZGym.Web.Controllers
             {
                 try
                 {
-                    _dbContext.Update(gymClass);
-                    await _dbContext.SaveChangesAsync();
+                    uow.GymClassRepository.Update(gymClass);
+                    await uow.CompeteAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -199,14 +194,14 @@ namespace ZGym.Web.Controllers
                 return BadRequest();
             }
 
-            var gymClass = _dbContext.GymClasses.Find(id);
+            var gymClass = await uow.GymClassRepository.FindAsync(id);
 
             if (await TryUpdateModelAsync(gymClass, "", g => g.Name, g => g.Duration))
             {
                 try
                 {
                     // _dbContext.Update(gymClass);
-                    await _dbContext.SaveChangesAsync();
+                    await uow.CompeteAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -234,8 +229,7 @@ namespace ZGym.Web.Controllers
                 return NotFound();
             }
 
-            var gymClass = await _dbContext.GymClasses
-                .FirstOrDefaultAsync(g => g.Id == id);
+            var gymClass = await uow.GymClassRepository.GetAsync(id);
             if (gymClass == null)
             {
                 return NotFound();
@@ -249,9 +243,9 @@ namespace ZGym.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var gymClass = await _dbContext.GymClasses.FindAsync(id);
-            _dbContext.GymClasses.Remove(gymClass);
-            await _dbContext.SaveChangesAsync();
+            var gymClass = await uow.GymClassRepository.FindAsync(id);
+            uow.GymClassRepository.Remove(gymClass);
+            await uow.CompeteAsync();
             return RedirectToAction(nameof(Index));
         }
 
@@ -264,13 +258,7 @@ namespace ZGym.Web.Controllers
             }
 
             var loggedInUser = _userManager.GetUserId(User);
-            var user = await _dbContext.Users
-                                .FirstOrDefaultAsync(u => u.Id == loggedInUser);
-            if (user is null)
-            {
-                return BadRequest();
-            }
-            var attending = await userGymClassRepo.GetAttending(id, loggedInUser);
+            var attending = await uow.UserGymClassRepository.GetAttending(id, loggedInUser);
 
             if (attending is null)
             {
@@ -280,17 +268,18 @@ namespace ZGym.Web.Controllers
                     ApplicationUserId = loggedInUser
                 };
 
-                _dbContext.UserGymClasses.Add(booking);
+                uow.UserGymClassRepository.Add(booking);
             }
             else
             {
-                _dbContext.UserGymClasses.Remove(attending);
+                uow.UserGymClassRepository.Remove(attending);
             }
 
-            await _dbContext.SaveChangesAsync();
+            await uow.CompeteAsync();
             return RedirectToAction(nameof(Index));
         }
 
+/* 
         [Authorize]
         public async Task<IActionResult> BookingToggle2(int? id)
         {
@@ -299,10 +288,7 @@ namespace ZGym.Web.Controllers
                 return BadRequest();
             }
 
-            var gymClass = await _dbContext.GymClasses
-                                .Include(g => g.AttendingMembers)
-                                .ThenInclude(a => a.ApplicationUser)
-                                .FirstOrDefaultAsync(g => g.Id == id);
+            var gymClass = uow.GymClassRepository.GetAsync(id);
             if (gymClass is null)
             {
                 return NotFound();
@@ -335,15 +321,11 @@ namespace ZGym.Web.Controllers
             await _dbContext.SaveChangesAsync();
             return View(nameof(Details), gymClass);
         }
-
-        public async Task<IActionResult> Bookings()
+ */
+/* 
+        public async Task<IActionResult> BookingsOld()
         {
             var userId = _userManager.GetUserId(User);
-
-            // var model1 = _dbContext.UserGymClasses
-            //                     .IgnoreQueryFilters()
-            //                     .Where(a => a.ApplicationUserId == userId)
-            //                     .Select(a => a.GymClass);
             
             var model = new IndexViewModel
             {
@@ -365,10 +347,24 @@ namespace ZGym.Web.Controllers
             // return View(nameof(Index), await model.ToListAsync());
             return View(nameof(Index), model);
         }
+ */
+
+        public async Task<IActionResult> Bookings()
+        {
+            var userId = _userManager.GetUserId(User);
+            
+            var model = _mapper.Map<IndexViewModel>(
+                await uow.UserGymClassRepository.GetBookingsAsync(userId),
+                opt => opt.Items.Add("Id", userId)
+            );
+            
+            // return View(nameof(Index), await model.ToListAsync());
+            return View(nameof(Index), model);
+        }
 
         private bool GymClassExists(int id)
         {
-            return _dbContext.GymClasses.Any(e => e.Id == id);
+            return uow.GymClassRepository.Any(id);
         }
 
         

@@ -3,11 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ZGym.Core.Entities;
+using ZGym.Core.Repositories;
 using ZGym.Data.Data;
 
 namespace ZGym.Data.Repositories
 {
-    public class UserGymClassRepository
+    public class UserGymClassRepository : IUserGymClassRepository
     {
         private readonly ApplicationDbContext _dbContext;
 
