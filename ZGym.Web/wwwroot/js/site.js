@@ -42,3 +42,7 @@ function removeForm() {
 function fail() {
     console.log("Failed in creation");
 }
+
+$('#history-checkbox').click(function() {
+    $('#history-form').submit();
+})

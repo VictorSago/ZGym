@@ -93,7 +93,6 @@ namespace ZGym.Web.Controllers
                 
                 if (Request.IsAjax())
                 {
-                    // return PartialView("GymClassesPartial", await _dbContext.GymClasses.ToListAsync());
                     return PartialView("GymClassPartial", gymClass);
                 }
                 

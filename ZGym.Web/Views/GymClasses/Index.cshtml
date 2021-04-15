@@ -8,6 +8,7 @@
 
 <div id="create-ajax"></div>
 
+<div class="row justify-content-between">
 @if (User.IsInRole("Admin"))
 {
     <div class="py-3">
@@ -19,11 +20,23 @@
             data-ajax="true"
             data-ajax-method="GET"
             data-ajax-update="#create-ajax"
-            data-ajax-mode="replace">
-                Create with Ajax
+            data-ajax-mode="replace">Create with Ajax
         </a>
     </div>
 }
+<div class="col-md-auto">
+</div>
+
+@if (User.IsInRole("Member"))
+{
+    <form asp-action="Index" class="p-3 mr-5" id="history-form">
+        <div class="form-group form-check form-check-inline float-end">
+            <label class="form-check-label align-middle p-2" for="history-checkbox">History</label>
+            <input class="form-check-input align-middle" type="checkbox" asp-for="ShowHistory" id="history-checkbox"/>
+        </div>
+    </form>
+}
+</div>
 
 <table class="table">
     <thead>
