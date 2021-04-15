@@ -11,6 +11,7 @@ namespace ZGym.Core.Repositories
         Task<GymClass> FindAsync(int? id);
         Task<IEnumerable<GymClass>> GetAllAsync();
         Task<IEnumerable<GymClass>> GetWithBookingsAsync();
+        // Task<IEnumerable<GymClass>> GetBookingsAsync();
         Task<IEnumerable<GymClass>> GetHistoryAsync();
         
         void Add(GymClass gymClass);

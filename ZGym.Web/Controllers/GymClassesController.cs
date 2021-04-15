@@ -39,23 +39,23 @@ namespace ZGym.Web.Controllers
         {
             if (!User.Identity.IsAuthenticated)
             {
-                var model1 = new IndexViewModel
-                {
-                    GymClasses = uow.GymClassRepository.GetWithBookingsAsync().Result
-                                            .Select(g => new GymClassesViewModel 
-                                            {
-                                                Id = g.Id,
-                                                Name = g.Name,
-                                                Duration = g.Duration,
-                                                Description = g.Description
-                                                // Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
-                                            })
-                };
-                return View(model1);
+                // var model1 = new IndexViewModel
+                // {
+                //     GymClasses = uow.GymClassRepository.GetWithBookingsAsync().Result
+                //                             .Select(g => new GymClassesViewModel 
+                //                             {
+                //                                 Id = g.Id,
+                //                                 Name = g.Name,
+                //                                 Duration = g.Duration,
+                //                                 Description = g.Description
+                //                             })
+                // };
+                var m1 = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetAllAsync());
+                return View(m1);
             }
 
             var userId = _userManager.GetUserId(User);
-            var m = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetAllAsync(), opt => opt.Items.Add("Id", userId));
+            var m = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetWithBookingsAsync(), opt => opt.Items.Add("Id", userId));
             /* var model = new IndexViewModel
             {
                 GymClasses = await _dbContext.GymClasses.Include(g => g.AttendingMembers)
@@ -353,6 +353,14 @@ namespace ZGym.Web.Controllers
         {
             var userId = _userManager.GetUserId(User);
             
+            // var model = _mapper.Map<IndexViewModel>(
+            //     await uow.UserGymClassRepository.GetBookingsAsync(userId),
+            //     opt => opt.Items.Add("Id", userId)
+            // );
+            // var model = _mapper.Map<IndexViewModel>(
+            //     await uow.GymClassRepository.GetHistoryAsync(),
+            //     opt => opt.Items.Add("Id", userId)
+            // );
             var model = _mapper.Map<IndexViewModel>(
                 await uow.UserGymClassRepository.GetBookingsAsync(userId),
                 opt => opt.Items.Add("Id", userId)

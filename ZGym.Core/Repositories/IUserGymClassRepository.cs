@@ -7,7 +7,7 @@ namespace ZGym.Core.Repositories
     public interface IUserGymClassRepository
     {
         Task<ApplicationUserGymClass> GetAttending(int? id, string userId);
-        Task<IEnumerable<ApplicationUserGymClass>> GetBookingsAsync(string userId);
+        Task<IEnumerable<GymClass>> GetBookingsAsync(string userId);
         void Add(ApplicationUserGymClass attending);
         void Remove(ApplicationUserGymClass attending);
     }

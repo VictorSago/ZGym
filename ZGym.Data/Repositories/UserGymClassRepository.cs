@@ -22,12 +22,14 @@ namespace ZGym.Data.Repositories
             return await _dbContext.UserGymClasses.FindAsync(userId, id);
         }
 
-        public async Task<IEnumerable<ApplicationUserGymClass>> GetBookingsAsync(string userId)
+        public async Task<IEnumerable<GymClass>> GetBookingsAsync(string userId)
         {
             return await _dbContext.UserGymClasses
                                     .Include(a => a.GymClass)
+                                    .ThenInclude(g => g.AttendingMembers)
                                     .IgnoreQueryFilters()
                                     .Where(a => a.ApplicationUserId == userId)
+                                    .Select(a => a.GymClass)
                                     .ToListAsync();
         }
 

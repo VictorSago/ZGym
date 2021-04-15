@@ -52,9 +52,18 @@ namespace ZGym.Data.Repositories
                             .ToListAsync();
         }
 
+        // public async Task<IEnumerable<GymClass>> GetBookingsAsync()
+        // {
+        //     return await _dbContext.GymClasses
+        //                     .Include(g => g.AttendingMembers)
+        //                     .IgnoreQueryFilters()
+        //                     .ToListAsync();
+        // }
+
         public async Task<IEnumerable<GymClass>> GetHistoryAsync()
         {
             return await _dbContext.GymClasses
+                            .Include(g => g.AttendingMembers)
                             .IgnoreQueryFilters()
                             .Where(g => g.StartTime < DateTime.Now)
                             .ToListAsync();
@@ -64,6 +73,7 @@ namespace ZGym.Data.Repositories
         {
             _dbContext.Add(gymClass);
         }
+        
         public void Update(GymClass gymClass)
         {
             _dbContext.Update(gymClass);
