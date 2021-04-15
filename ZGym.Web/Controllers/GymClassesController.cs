@@ -14,6 +14,7 @@ using ZGym.Core.ViewModels;
 using ZGym.Data.Data;
 using ZGym.Data.Repositories;
 using ZGym.Web.Extensions;
+using ZGym.Web.Filters;
 
 namespace ZGym.Web.Controllers
 {
@@ -63,6 +64,7 @@ namespace ZGym.Web.Controllers
 
         // GET: GymClasses/Details/5
         [Authorize]
+        [RequiredIdRequiredModel("Id")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
