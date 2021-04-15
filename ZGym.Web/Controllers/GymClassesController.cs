@@ -67,16 +67,7 @@ namespace ZGym.Web.Controllers
         [RequiredIdRequiredModel("Id")]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var gymClass = await uow.GymClassRepository.GetWithUsersAsync(id);
-            if (gymClass == null)
-            {
-                return NotFound();
-            }
 
             return View(gymClass);
         }
@@ -120,18 +111,11 @@ namespace ZGym.Web.Controllers
 
         // GET: GymClasses/Edit/5
         [Authorize(Roles = "Admin")]
+        [RequiredIdRequiredModel("Id")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id is null)
-            {
-                return NotFound();
-            }
-
             var gymClass = await uow.GymClassRepository.FindAsync(id);
-            if (gymClass is null)
-            {
-                return NotFound();
-            }
+            
             return View(gymClass);
         }
 
@@ -210,18 +194,10 @@ namespace ZGym.Web.Controllers
 
         // GET: GymClasses/Delete/5
         [Authorize(Roles = "Admin")]
+        [RequiredIdRequiredModel("Id")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var gymClass = await uow.GymClassRepository.GetAsync(id);
-            if (gymClass == null)
-            {
-                return NotFound();
-            }
 
             return View(gymClass);
         }
@@ -271,20 +247,11 @@ namespace ZGym.Web.Controllers
         {
             var userId = _userManager.GetUserId(User);
             
-            // var model = _mapper.Map<IndexViewModel>(
-            //     await uow.UserGymClassRepository.GetBookingsAsync(userId),
-            //     opt => opt.Items.Add("Id", userId)
-            // );
-            // var model = _mapper.Map<IndexViewModel>(
-            //     await uow.GymClassRepository.GetHistoryAsync(),
-            //     opt => opt.Items.Add("Id", userId)
-            // );
             var model = _mapper.Map<IndexViewModel>(
                 await uow.UserGymClassRepository.GetBookingsAsync(userId),
                 opt => opt.Items.Add("Id", userId)
             );
             
-            // return View(nameof(Index), await model.ToListAsync());
             return View(nameof(Index), model);
         }
 
