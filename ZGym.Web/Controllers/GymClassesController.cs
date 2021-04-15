@@ -35,44 +35,30 @@ namespace ZGym.Web.Controllers
         // GET: GymClasses
         // [Authorize(Roles = "Member")]
         [AllowAnonymous]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(IndexViewModel viewModel = null)
         {
+            var model = new IndexViewModel();
+
             if (!User.Identity.IsAuthenticated)
             {
-                // var model1 = new IndexViewModel
-                // {
-                //     GymClasses = uow.GymClassRepository.GetWithBookingsAsync().Result
-                //                             .Select(g => new GymClassesViewModel 
-                //                             {
-                //                                 Id = g.Id,
-                //                                 Name = g.Name,
-                //                                 Duration = g.Duration,
-                //                                 Description = g.Description
-                //                             })
-                // };
-                var m1 = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetAllAsync());
-                return View(m1);
+                model = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetAllAsync());
             }
 
             var userId = _userManager.GetUserId(User);
-            var m = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetWithBookingsAsync(), opt => opt.Items.Add("Id", userId));
-            /* var model = new IndexViewModel
+
+            if (viewModel.ShowHistory)
             {
-                GymClasses = await _dbContext.GymClasses.Include(g => g.AttendingMembers)
-                                        .Select(g => new GymClassesViewModel 
-                                        {
-                                            Id = g.Id,
-                                            Name = g.Name,
-                                            StartTime = g.StartTime,
-                                            Duration = g.Duration,
-                                            Description = g.Description,
-                                            Attending = g.AttendingMembers.Any(a => a.ApplicationUserId == userId)
-                                        })
-                                        .ToListAsync()
-            }; */
-            // var model = new IndexViewModel();
-            // return View(model);
-            return View(m);
+                model = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetHistoryAsync(),
+                                                                            opt => opt.Items.Add("Id", userId));
+            }
+
+            if (User.Identity.IsAuthenticated && !viewModel.ShowHistory)
+            {
+                model = _mapper.Map<IndexViewModel>(await uow.GymClassRepository.GetWithBookingsAsync(),
+                                                                            opt => opt.Items.Add("Id", userId));
+            }
+            
+            return View(model);
         }
 
         // GET: GymClasses/Details/5
@@ -278,76 +264,6 @@ namespace ZGym.Web.Controllers
             await uow.CompeteAsync();
             return RedirectToAction(nameof(Index));
         }
-
-/* 
-        [Authorize]
-        public async Task<IActionResult> BookingToggle2(int? id)
-        {
-            if (id is null)
-            {
-                return BadRequest();
-            }
-
-            var gymClass = uow.GymClassRepository.GetAsync(id);
-            if (gymClass is null)
-            {
-                return NotFound();
-            }
-
-            var loggedInUser = _userManager.GetUserId(User);
-            var user = await _dbContext.Users
-                                .FirstOrDefaultAsync(u => u.Id == loggedInUser);
-            if (user is null)
-            {
-                return BadRequest();
-            }
-            var attendingMembers = gymClass?.AttendingMembers;
-            var attendance = attendingMembers.FirstOrDefault(a => a.ApplicationUserId == loggedInUser);
-            if (attendance == null)
-            {
-                attendingMembers.Add(new ApplicationUserGymClass()
-                {
-                    GymClassId = gymClass.Id,
-                    GymClass = gymClass,
-                    ApplicationUserId = loggedInUser,
-                    ApplicationUser = user
-                });
-            }
-            else
-            {
-                attendingMembers.Remove(attendance);
-            }
-            _dbContext.Update(gymClass);
-            await _dbContext.SaveChangesAsync();
-            return View(nameof(Details), gymClass);
-        }
- */
-/* 
-        public async Task<IActionResult> BookingsOld()
-        {
-            var userId = _userManager.GetUserId(User);
-            
-            var model = new IndexViewModel
-            {
-                GymClasses = await _dbContext.UserGymClasses
-                                .IgnoreQueryFilters()
-                                .Where(a => a.ApplicationUserId == userId)
-                                .Select(a => new GymClassesViewModel
-                                {
-                                    Id = a.GymClass.Id,
-                                    Name = a.GymClass.Name,
-                                    StartTime = a.GymClass.StartTime,
-                                    Duration = a.GymClass.Duration,
-                                    Description = a.GymClass.Description,
-                                    Attending = true
-                                })
-                                .ToListAsync()
-            };
-            
-            // return View(nameof(Index), await model.ToListAsync());
-            return View(nameof(Index), model);
-        }
- */
 
         public async Task<IActionResult> Bookings()
         {
