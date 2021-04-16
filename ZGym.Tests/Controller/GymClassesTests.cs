@@ -12,6 +12,7 @@ using ZGym.Core.ViewModels;
 using ZGym.Data.Data;
 using ZGym.Tests.Extensions;
 using ZGym.Web.Controllers;
+using System.Threading.Tasks;
 
 namespace ZGym.Tests.Controller
 {
@@ -58,6 +59,37 @@ namespace ZGym.Tests.Controller
             var actual = (IndexViewModel)viewResult.Model;
 
             Assert.AreEqual(expected.GymClasses.Count(), actual.GymClasses.Count());
+        }
+
+        [TestMethod]
+        public async Task Index_ReturnsViewResult_ShouldPassAsync()
+        {
+            controller.SetUserIsAuthenticated(true);
+            var vm = new IndexViewModel
+            {
+                ShowHistory = false
+            };
+            var actual = await controller.Index(vm);
+
+            Assert.IsInstanceOfType(actual, typeof(ViewResult));
+        }
+
+        [TestMethod]
+        public void Create_ReturnsDefaultView_ShouldReturnNull()
+        {
+            controller.SetAjaxRequest(false);
+            var actual = controller.Create() as ViewResult;
+
+            Assert.IsNull(actual.ViewName);
+        }
+
+        [TestMethod]
+        public void Create_ReturnsPartialViewWhenAjax_ShouldNotBeNull()
+        {
+            controller.SetAjaxRequest(true);
+            var actual = controller.Create() as PartialViewResult;
+
+            Assert.IsNotNull(actual);
         }
 
         private List<GymClass> GetGymClassList()
